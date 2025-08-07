@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Movie Finder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <script defer src="{{ url_for('static', filename='script.js') }}"></script>
+  </head>
+  <body data-theme="light">
+    <!-- Theme Toggle -->
+    <button type="button" id="theme-toggle" class="toggle-btn">🌙 Dark</button>
+
+    <h1>🎬 Movie Finder</h1>
+
+    <!-- Search Form -->
+    <form method="POST">
+      <input
+        type="text"
+        name="movie"
+        placeholder="Enter movie name"
+        autocomplete="off"
+        required
+      />
+      <button type="submit">Search</button>
+      <ul id="autocomplete-list" class="autocomplete-items"></ul>
+    </form>
+
+    {% if error %}
+    <p style="color: red">{{ error }}</p>
+    {% endif %}
+
+    <!-- Loading Spinner -->
+    <div class="spinner" id="spinner"></div>
+
+    {% if results %}
+    <!-- Genre Filters -->
+    <div class="genre-filters">
+      <strong>Filter by Genre:</strong>
+      <div class="chip-container">
+        <span class="genre-chip selected" data-genre="All">All</span>
+        {% for movie in results %} {% for genre in movie.genres %} {% if genre
+        not in genre_list %} {% set _ = genre_list.append(genre) %} {% endif %}
+        {% endfor %} {% endfor %} {% for genre in genre_list %}
+        <span class="genre-chip" data-genre="{{ genre }}">{{ genre }}</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button id="show-all-tab" class="tab-btn active">🎬 All Movies</button>
+      <button id="show-favorites-tab" class="tab-btn">❤️ Favorites</button>
+    </div>
+
+    <!-- All Movies Results -->
+    <div id="all-movies" class="results">
+      {% for movie in results %}
+      <div class="movie-card" data-id="{{ movie.imdb_id }}">
+        <img src="{{ movie.poster }}" alt="Poster for {{ movie.title }}" />
+        <h3>{{ movie.title }}</h3>
+        <p>Year: {{ movie.year }}</p>
+        <p>
+          <span class="badge {{ movie.rating_class }}"
+            >IMDb: {{ movie.rating }}</span
+          >
+        </p>
+
+        {% if movie.genres %}
+        <div class="genres">
+          {% for genre in movie.genres %}
+          <span class="genre-tag">{{ genre }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <button
+          class="fav-btn"
+          data-id="{{ movie.imdb_id }}"
+          data-title="{{ movie.title }}"
+          data-poster="{{ movie.poster }}"
+        >
+          Add to Favorites
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Favorites (Rendered by JS) -->
+    <div id="favorites" class="results" style="display: none"></div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      {% if page > 1 %}
+      <a href="/?movie={{ query }}&page={{ page - 1 }}">← Previous</a>
+      {% endif %}
+      <span>Page {{ page }} of {{ total_pages }}</span>
+      {% if page < total_pages %}
+      <a href="/?movie={{ query }}&page={{ page + 1 }}">Next →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Search History -->
+    {% if history %}
+    <div class="history">
+      <h3>Search History</h3>
+      <ul>
+        {% for item in history %}
+        <li><a href="/?movie={{ item }}">{{ item }}</a></li>
+        {% endfor %}
+      </ul>
+      <form action="/clear-history">
+        <button type="submit" class="clear-btn">Clear History</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Modal for Movie Details -->
+    <div id="modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div id="modal-body">Loading...</div>
+      </div>
+    </div>
+  </body>
+</html>
